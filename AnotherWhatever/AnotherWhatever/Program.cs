@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -54,21 +55,14 @@ namespace AnotherWhatever
             var Users = new List<User>();
             HttpClient client = new HttpClient();
             HttpResponseMessage response = await client.GetAsync($"{baseUri}Users/GetAllUsers");
-            if (response.StatusCode.Equals(HttpStatusCode.OK))
+            if (response.IsSuccessStatusCode)
             {
                 Users = await response.Content.ReadAsAsync<List<User>>();
                 return Users;
             }
-            else if (response.StatusCode.Equals(HttpStatusCode.NotFound))
-            {
-                throw new Exception();
-            }
-            else if (response.StatusCode.Equals(HttpStatusCode.NoContent))
-            {
-                throw new Exception();
-            }
             else
             {
+                Console.WriteLine(response.StatusCode);
                 return null;
             }
         }
@@ -78,24 +72,15 @@ namespace AnotherWhatever
             HttpClient client = new HttpClient();
             HttpResponseMessage response = await client.GetAsync($"{baseUri}Users/GetUserByID/{userID}");
             var UserJsonString = response.Content.ReadAsStringAsync().Result;
-            if (response.StatusCode.Equals(HttpStatusCode.OK))
+            if (response.IsSuccessStatusCode)
             {
                 return Newtonsoft.Json.JsonConvert.DeserializeObject<User>(UserJsonString);
-
-            }
-            else if (response.StatusCode.Equals(HttpStatusCode.NotFound))
-            {
-                throw new Exception();
-            }
-            else if (response.StatusCode.Equals(HttpStatusCode.NoContent))
-            {
-                throw new Exception();
             }
             else
             {
+                Console.WriteLine(response.StatusCode);
                 return null;
             }
-
         }
 
         public static async Task<List<CarpoolShort>> GetAllCarpoolsAsync()
@@ -103,25 +88,16 @@ namespace AnotherWhatever
             var Carpools = new List<CarpoolShort>();
             HttpClient client = new HttpClient();
             HttpResponseMessage response = await client.GetAsync($"{baseUri}Carpools/GetAllCarpools");
-            if (response.StatusCode.Equals(HttpStatusCode.OK))
+            if (response.IsSuccessStatusCode)
             {
                 Carpools = await response.Content.ReadAsAsync<List<CarpoolShort>>();
                 return Carpools;
             }
-            else if (response.StatusCode.Equals(HttpStatusCode.NotFound))
-            {
-                throw new Exception();
-            }
-            else if (response.StatusCode.Equals(HttpStatusCode.NoContent))
-            {
-                throw new Exception();
-            }
             else
             {
+                Console.WriteLine(response.StatusCode);
                 return null;
             }
-
-
         }
 
         public static async Task<CarpoolComplete> GetCarpoolByIdAsync(int carpoolID)
@@ -129,43 +105,28 @@ namespace AnotherWhatever
             HttpClient client = new HttpClient();
             HttpResponseMessage response = await client.GetAsync($"{baseUri}Carpools/GetCarpoolById/{carpoolID}");
             var UserJsonString = response.Content.ReadAsStringAsync().Result;
-            if (response.StatusCode.Equals(HttpStatusCode.OK))
+            if (response.IsSuccessStatusCode)
             {
                 return Newtonsoft.Json.JsonConvert.DeserializeObject<CarpoolComplete>(UserJsonString);
             }
-            else if (response.StatusCode.Equals(HttpStatusCode.NotFound))
-            {
-                throw new Exception();
-            }
-            else if (response.StatusCode.Equals(HttpStatusCode.NoContent))
-            {
-                throw new Exception();
-            }
             else
             {
+                Console.WriteLine(response.StatusCode);
                 return null;
             }
-
         }
 
         public static async Task DeleteCarpool(int carpoolID, int userID, string password)
         {
             HttpClient client = new HttpClient();
             HttpResponseMessage response = await client.DeleteAsync($"{baseUri}Carpools/DeleteCarpoolById/{carpoolID}/{userID}/{password}");
-            if (response.StatusCode.Equals(HttpStatusCode.OK))
+            if (response.IsSuccessStatusCode)
             {
                 return;
             }
-            else if (response.StatusCode.Equals(HttpStatusCode.NotFound))
-            {
-                throw new Exception();
-            }
-            else if (response.StatusCode.Equals(HttpStatusCode.NoContent))
-            {
-                throw new Exception();
-            }
             else
             {
+                Console.WriteLine(response.StatusCode);
                 return;
             }
         }
@@ -174,21 +135,59 @@ namespace AnotherWhatever
         {
             HttpClient client = new HttpClient();
             HttpResponseMessage response = await client.DeleteAsync($"{baseUri}Users/DeleteUserByID/{userID}?password={password}");
-            if (response.StatusCode.Equals(HttpStatusCode.OK))
+            if (response.IsSuccessStatusCode)
             {
                 return;
-            }
-            else if (response.StatusCode.Equals(HttpStatusCode.NotFound))
-            {
-                throw new Exception();
-            }
-            else if (response.StatusCode.Equals(HttpStatusCode.NoContent))
-            {
-                throw new Exception();
             }
             else
             {
+                Console.WriteLine(response.StatusCode);
                 return;
+            }
+        }
+
+        public static async Task RemovePassengerFromCarpool(int carpoolID, int userID, string password)
+        {
+            HttpClient client = new HttpClient();
+            HttpResponseMessage response = await client.DeleteAsync($"{baseUri}Users/RemoveUserFromCarpoolID/{carpoolID}/{userID}?password={password}");
+            if (response.IsSuccessStatusCode)
+            {
+                return;
+            }
+            else
+            {
+                Console.WriteLine(response.StatusCode);
+                return;
+            }
+        }
+
+        public static async Task UpdateUser(int userID, string password, User user)
+        {
+            HttpClient client = new HttpClient();
+            var userString = JsonConvert.SerializeObject(user);
+            HttpResponseMessage response = await client.PutAsync($"{baseUri}Users/EditUserById/{userID}?password={password}", new StringContent(userString, Encoding.UTF8, "application/json"));
+            if (response.IsSuccessStatusCode)
+            {
+                Console.WriteLine("Put successful!");
+            }
+            else
+            {
+                Console.WriteLine(response.StatusCode);
+            }
+        }
+
+        public static async Task UpdateCarpool(int carpoolID, int userID, string password, CarpoolShort carpool)
+        {
+            HttpClient client = new HttpClient();
+            var carpoolString = JsonConvert.SerializeObject(carpool);
+            HttpResponseMessage response = await client.PutAsync($"{baseUri}Carpools/EditCarpool/{carpoolID}/{userID}/{password}", new StringContent(carpoolString, Encoding.UTF8, "application/json"));
+            if (response.IsSuccessStatusCode)
+            {
+                Console.WriteLine("Put successful!");
+            }
+            else
+            {
+                Console.WriteLine(response.StatusCode);
             }
         }
 
@@ -255,6 +254,8 @@ namespace AnotherWhatever
             } while (userClassBool);
         }
 
+
+
         /// <summary>
         /// This is the main menu for the User class 
         /// </summary>
@@ -270,12 +271,12 @@ namespace AnotherWhatever
                     "║            Users Menu           ║\n" +
                     "╚═════════════════════════════════╝");
                 Console.ResetColor();
-                CwL("\n( 1 )\tSearch for a Specific User by User_ID" +
+                CwL("\n( 1 )\tSearch for a specific user by User_ID" +
                     "\n( 2 )\tList all registered users" +
                     "\n( 3 )\t" +
-                    "\n( 4 )\t" +
+                    "\n( 4 )\tEdit/Update user account" +
                     "\n( 5 )\tDelete own carpool" +
-                    "\n( 6 )\t" +
+                    "\n( 6 )\tRemove yourself from a carpool" +
                     "\n( 7 )\tDelete own account");
                 Console.ForegroundColor = ConsoleColor.Blue;
                 Console.WriteLine("\n( 9 )\tBack to the main menu");
@@ -330,6 +331,40 @@ namespace AnotherWhatever
                         userPassengerBool = true;
                         continue;
                     case 4:
+                        Console.Clear();
+                        CwL("Your User ID to edit: ");
+                        int userIDx = Convert.ToInt32(Console.ReadLine());
+                        CwL("Your account password: ");
+                        string passwordx = Console.ReadLine();
+                        Console.Clear();
+                        CwL("Enter you new info: ");
+                        CwL("Your e-mail address: ");
+                        string email = Console.ReadLine();
+                        CwL("Your password: ");
+                        string passwordN = Console.ReadLine();
+                        CwL("Your phone number: ");
+                        string phoneno = Console.ReadLine();
+                        CwL("Your first name: ");
+                        string firstname = Console.ReadLine();
+                        CwL("Your last name: ");
+                        string lastname = Console.ReadLine();
+                        CwL("Are you driving? 1 for yes, 0 for no: ");
+                        int isdriver = Convert.ToInt32(Console.ReadLine());
+                        Console.Clear();
+
+                        User userN = new User()
+                        {
+                            id = userIDx,
+                            email = email,
+                            password = passwordN,
+                            phoneNo = phoneno,
+                            firstName = firstname,
+                            lastName = lastname,
+                            isDriver = Convert.ToBoolean(isdriver)
+                        };
+
+                        UpdateUser(userIDx, passwordx, userN);
+                        Console.ReadLine();
                         userPassengerBool = true;
                         continue;
                     case 5:
@@ -346,6 +381,16 @@ namespace AnotherWhatever
                         userPassengerBool = true;
                         continue;
                     case 6:
+                        Console.Clear();
+                        CwL("The Carpool ID where the user is to be removed from: ");
+                        carpoolID = Convert.ToInt32(Console.ReadLine());
+                        CwL("Your User ID to remove: ");
+                        userID = Convert.ToInt32(Console.ReadLine());
+                        CwL("Your account password: ");
+                        password = Console.ReadLine();
+                        Console.Clear();
+                        DeleteUserAccount(userID, password);
+                        Console.ReadLine();
                         userPassengerBool = true;
                         continue;
                     case 7:
@@ -388,7 +433,7 @@ namespace AnotherWhatever
                 CwL("\n( 1 )\tSearch for a Specific Carpool by Carpool_ID" +
                     "\n( 2 )\tList all registered carpools" +
                     "\n( 3 )\t" +
-                    "\n( 4 )\t" +
+                    "\n( 4 )\tEdit/Update you carpool" +
                     "\n( 5 )\t" +
                     "\n( 6 )\t" +
                     "\n( 7 )\t");
@@ -445,6 +490,37 @@ namespace AnotherWhatever
                         userPassengerBool = true;
                         continue;
                     case 4:
+                        Console.Clear();
+                        CwL("Your Carpool ID to edit: ");
+                        int carpoolID = Convert.ToInt32(Console.ReadLine());
+                        CwL("Your User ID: ");
+                        int userID = Convert.ToInt32(Console.ReadLine());
+                        CwL("Your account password: ");
+                        string password = Console.ReadLine();
+                        Console.Clear();
+                        CwL("Enter you new carpool info: ");
+                        CwL("How many total seats are available: ");
+                        int totalseats = Convert.ToInt32(Console.ReadLine());
+                        CwL("Origin: ");
+                        string origin = Console.ReadLine();
+                        CwL("Destination: ");
+                        string destination = Console.ReadLine();
+                        CwL("Departure Date & Time: ");
+                        DateTime datetimedeparture = Convert.ToDateTime(Console.ReadLine());
+                        Console.Clear();
+
+                        CarpoolShort carpoolx = new CarpoolShort()
+                        {
+                            CarpoolID= carpoolID,
+                            DriverID=userID,
+                            TotalSeatsCount= totalseats,
+                            Origin= origin,
+                            Destination= destination,   
+                            DepartureDate= datetimedeparture
+                        };
+
+                        UpdateCarpool(carpoolID, userID, password, carpoolx);
+                        Console.ReadLine();
                         userPassengerBool = true;
                         continue;
                     case 5:
