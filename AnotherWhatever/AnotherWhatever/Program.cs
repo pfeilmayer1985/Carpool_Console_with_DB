@@ -168,7 +168,22 @@ namespace AnotherWhatever
             HttpResponseMessage response = await client.PutAsync($"{baseUri}Users/EditUserById/{userID}?password={password}", new StringContent(userString, Encoding.UTF8, "application/json"));
             if (response.IsSuccessStatusCode)
             {
-                Console.WriteLine("Put successful!");
+                Console.WriteLine("User edit successful!");
+            }
+            else
+            {
+                Console.WriteLine(response.StatusCode);
+            }
+        }
+
+        public static async Task AddNewUser(User user)
+        {
+            HttpClient client = new HttpClient();
+            var userString = JsonConvert.SerializeObject(user);
+            HttpResponseMessage response = await client.PostAsync($"{baseUri}Users/AddUser", new StringContent(userString, Encoding.UTF8, "application/json"));
+            if (response.IsSuccessStatusCode)
+            {
+                Console.WriteLine("Successful DB entry, User added!");
             }
             else
             {
@@ -183,7 +198,36 @@ namespace AnotherWhatever
             HttpResponseMessage response = await client.PutAsync($"{baseUri}Carpools/EditCarpool/{carpoolID}/{userID}/{password}", new StringContent(carpoolString, Encoding.UTF8, "application/json"));
             if (response.IsSuccessStatusCode)
             {
-                Console.WriteLine("Put successful!");
+                Console.WriteLine("Carpool edit successful!");
+            }
+            else
+            {
+                Console.WriteLine(response.StatusCode);
+            }
+        }
+
+        public static async Task AddNewCarpool(int userID, CarpoolShort carpool)
+        {
+            HttpClient client = new HttpClient();
+            var carpoolString = JsonConvert.SerializeObject(carpool);
+            HttpResponseMessage response = await client.PostAsync($"{baseUri}Carpools/DriverCreatesCarpool/{userID}", new StringContent(carpoolString, Encoding.UTF8, "application/json"));
+            if (response.IsSuccessStatusCode)
+            {
+                Console.WriteLine("Successful DB entry, carpool added!");
+            }
+            else
+            {
+                Console.WriteLine(response.StatusCode);
+            }
+        }
+
+        public static async Task AddNewPassenger(int carpoolID, int userID)
+        {
+            HttpClient client = new HttpClient();
+            HttpResponseMessage response = await client.PostAsync($"{baseUri}Carpools/PassengerJoinsExistingCarpool/{carpoolID}/{userID}", new StringContent(string.Empty, Encoding.UTF8, "application/json"));
+            if (response.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"Successful DB entry, passenger (user ID {userID}) added to carpool (carpool ID {carpoolID})!");
             }
             else
             {
@@ -273,7 +317,7 @@ namespace AnotherWhatever
                 Console.ResetColor();
                 CwL("\n( 1 )\tSearch for a specific user by User_ID" +
                     "\n( 2 )\tList all registered users" +
-                    "\n( 3 )\t" +
+                    "\n( 3 )\tAdd new user" +
                     "\n( 4 )\tEdit/Update user account" +
                     "\n( 5 )\tDelete own carpool" +
                     "\n( 6 )\tRemove yourself from a carpool" +
@@ -328,6 +372,33 @@ namespace AnotherWhatever
                         userPassengerBool = true;
                         continue;
                     case 3:
+                        Console.Clear();
+                        CwL("Your e-mail address: ");
+                        string emailNewEntry = Console.ReadLine();
+                        CwL("Your password: ");
+                        string passwordNewEntry = Console.ReadLine();
+                        CwL("Your phone number: ");
+                        string phonenoNewEntry = Console.ReadLine();
+                        CwL("Your first name: ");
+                        string firstnameNewEntry = Console.ReadLine();
+                        CwL("Your last name: ");
+                        string lastnameNewEntry = Console.ReadLine();
+                        CwL("Are you driving? 1 for yes, 0 for no: ");
+                        int isdriverNewEntry = Convert.ToInt32(Console.ReadLine());
+                        Console.Clear();
+
+                        User userNewEntry = new User()
+                        {
+                            email = emailNewEntry,
+                            password = passwordNewEntry,
+                            phoneNo = phonenoNewEntry,
+                            firstName = firstnameNewEntry,
+                            lastName = lastnameNewEntry,
+                            isDriver = Convert.ToBoolean(isdriverNewEntry)
+                        };
+
+                        AddNewUser(userNewEntry);
+                        Console.ReadLine();
                         userPassengerBool = true;
                         continue;
                     case 4:
@@ -432,9 +503,9 @@ namespace AnotherWhatever
                 Console.ResetColor();
                 CwL("\n( 1 )\tSearch for a Specific Carpool by Carpool_ID" +
                     "\n( 2 )\tList all registered carpools" +
-                    "\n( 3 )\t" +
+                    "\n( 3 )\tAdd new carpool" +
                     "\n( 4 )\tEdit/Update you carpool" +
-                    "\n( 5 )\t" +
+                    "\n( 5 )\tJoin a carpool (as passenger)" +
                     "\n( 6 )\t" +
                     "\n( 7 )\t");
                 Console.ForegroundColor = ConsoleColor.Blue;
@@ -487,6 +558,30 @@ namespace AnotherWhatever
                         userPassengerBool = true;
                         continue;
                     case 3:
+                        Console.Clear();
+                        CwL("Your user ID ");
+                        int userIDNewEntry = Convert.ToInt32(Console.ReadLine());
+                        CwL("How many seats available: ");
+                        int seatsNewEntry = Convert.ToInt32(Console.ReadLine());
+                        CwL("Origin: ");
+                        string originNewEntry = Console.ReadLine();
+                        CwL("Destination: ");
+                        string destinationNewEntry = Console.ReadLine();
+                        CwL("Departure Date & Time: ");
+                        DateTime datetimedepartureNewEntry = Convert.ToDateTime(Console.ReadLine());
+                        Console.Clear();
+
+                        CarpoolShort carpoolNewEntry = new CarpoolShort()
+                        {
+                            DriverID = userIDNewEntry,
+                            TotalSeatsCount = seatsNewEntry,
+                            Origin = originNewEntry,
+                            Destination = destinationNewEntry,
+                            DepartureDate = datetimedepartureNewEntry
+                        };
+
+                        AddNewCarpool(userIDNewEntry, carpoolNewEntry);
+                        Console.ReadLine();
                         userPassengerBool = true;
                         continue;
                     case 4:
@@ -511,12 +606,12 @@ namespace AnotherWhatever
 
                         CarpoolShort carpoolx = new CarpoolShort()
                         {
-                            CarpoolID= carpoolID,
-                            DriverID=userID,
-                            TotalSeatsCount= totalseats,
-                            Origin= origin,
-                            Destination= destination,   
-                            DepartureDate= datetimedeparture
+                            CarpoolID = carpoolID,
+                            DriverID = userID,
+                            TotalSeatsCount = totalseats,
+                            Origin = origin,
+                            Destination = destination,
+                            DepartureDate = datetimedeparture
                         };
 
                         UpdateCarpool(carpoolID, userID, password, carpoolx);
@@ -524,6 +619,14 @@ namespace AnotherWhatever
                         userPassengerBool = true;
                         continue;
                     case 5:
+                        Console.Clear();
+                        CwL("The Carpool ID you want to join: ");
+                        int carpoolIDToJoin = Convert.ToInt32(Console.ReadLine());
+                        CwL("Your User ID: ");
+                        int userIDThatJoins = Convert.ToInt32(Console.ReadLine());
+                        Console.Clear();
+                        AddNewPassenger(carpoolIDToJoin, userIDThatJoins);  
+                        Console.ReadLine();
                         userPassengerBool = true;
                         continue;
                     case 6:
