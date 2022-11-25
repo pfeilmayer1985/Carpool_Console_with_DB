@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -52,34 +53,143 @@ namespace AnotherWhatever
         {
             var Users = new List<User>();
             HttpClient client = new HttpClient();
-            HttpResponseMessage response = await client.GetAsync(baseUri + "Users/GetAllUsers");
-            Users = await response.Content.ReadAsAsync<List<User>>();
-            return Users;
+            HttpResponseMessage response = await client.GetAsync($"{baseUri}Users/GetAllUsers");
+            if (response.StatusCode.Equals(HttpStatusCode.OK))
+            {
+                Users = await response.Content.ReadAsAsync<List<User>>();
+                return Users;
+            }
+            else if (response.StatusCode.Equals(HttpStatusCode.NotFound))
+            {
+                throw new Exception();
+            }
+            else if (response.StatusCode.Equals(HttpStatusCode.NoContent))
+            {
+                throw new Exception();
+            }
+            else
+            {
+                return null;
+            }
         }
 
-        public static async Task<User> GetUserByIdAsync(int id)
+        public static async Task<User> GetUserByIdAsync(int userID)
         {
             HttpClient client = new HttpClient();
-            HttpResponseMessage response = await client.GetAsync(baseUri + "Users/GetUserByID/" + id.ToString());
+            HttpResponseMessage response = await client.GetAsync($"{baseUri}Users/GetUserByID/{userID}");
             var UserJsonString = response.Content.ReadAsStringAsync().Result;
-            return Newtonsoft.Json.JsonConvert.DeserializeObject<User>(UserJsonString);
+            if (response.StatusCode.Equals(HttpStatusCode.OK))
+            {
+                return Newtonsoft.Json.JsonConvert.DeserializeObject<User>(UserJsonString);
+
+            }
+            else if (response.StatusCode.Equals(HttpStatusCode.NotFound))
+            {
+                throw new Exception();
+            }
+            else if (response.StatusCode.Equals(HttpStatusCode.NoContent))
+            {
+                throw new Exception();
+            }
+            else
+            {
+                return null;
+            }
+
         }
 
         public static async Task<List<CarpoolShort>> GetAllCarpoolsAsync()
         {
             var Carpools = new List<CarpoolShort>();
             HttpClient client = new HttpClient();
-            HttpResponseMessage response = await client.GetAsync(baseUri + "Carpools/GetAllCarpools");
-            Carpools = await response.Content.ReadAsAsync<List<CarpoolShort>>();
-            return Carpools;
+            HttpResponseMessage response = await client.GetAsync($"{baseUri}Carpools/GetAllCarpools");
+            if (response.StatusCode.Equals(HttpStatusCode.OK))
+            {
+                Carpools = await response.Content.ReadAsAsync<List<CarpoolShort>>();
+                return Carpools;
+            }
+            else if (response.StatusCode.Equals(HttpStatusCode.NotFound))
+            {
+                throw new Exception();
+            }
+            else if (response.StatusCode.Equals(HttpStatusCode.NoContent))
+            {
+                throw new Exception();
+            }
+            else
+            {
+                return null;
+            }
+
+
         }
 
-        public static async Task<CarpoolComplete> GetCarpoolByIdAsync(int id)
+        public static async Task<CarpoolComplete> GetCarpoolByIdAsync(int carpoolID)
         {
             HttpClient client = new HttpClient();
-            HttpResponseMessage response = await client.GetAsync(baseUri + "Carpools/GetCarpoolById/" + id.ToString());
+            HttpResponseMessage response = await client.GetAsync($"{baseUri}Carpools/GetCarpoolById/{carpoolID}");
             var UserJsonString = response.Content.ReadAsStringAsync().Result;
-            return Newtonsoft.Json.JsonConvert.DeserializeObject<CarpoolComplete>(UserJsonString);
+            if (response.StatusCode.Equals(HttpStatusCode.OK))
+            {
+                return Newtonsoft.Json.JsonConvert.DeserializeObject<CarpoolComplete>(UserJsonString);
+            }
+            else if (response.StatusCode.Equals(HttpStatusCode.NotFound))
+            {
+                throw new Exception();
+            }
+            else if (response.StatusCode.Equals(HttpStatusCode.NoContent))
+            {
+                throw new Exception();
+            }
+            else
+            {
+                return null;
+            }
+
+        }
+
+        public static async Task DeleteCarpool(int carpoolID, int userID, string password)
+        {
+            HttpClient client = new HttpClient();
+            HttpResponseMessage response = await client.DeleteAsync($"{baseUri}Carpools/DeleteCarpoolById/{carpoolID}/{userID}/{password}");
+            if (response.StatusCode.Equals(HttpStatusCode.OK))
+            {
+                return;
+            }
+            else if (response.StatusCode.Equals(HttpStatusCode.NotFound))
+            {
+                throw new Exception();
+            }
+            else if (response.StatusCode.Equals(HttpStatusCode.NoContent))
+            {
+                throw new Exception();
+            }
+            else
+            {
+                return;
+            }
+        }
+
+        public static async Task DeleteUserAccount(int userID, string password)
+        {
+            HttpClient client = new HttpClient();
+            HttpResponseMessage response = await client.DeleteAsync($"{baseUri}Users/DeleteUserByID/{userID}?password={password}");
+            if (response.StatusCode.Equals(HttpStatusCode.OK))
+            {
+                return;
+            }
+            else if (response.StatusCode.Equals(HttpStatusCode.NotFound))
+            {
+                throw new Exception();
+            }
+            else if (response.StatusCode.Equals(HttpStatusCode.NoContent))
+            {
+                throw new Exception();
+            }
+            else
+            {
+                return;
+            }
         }
 
         /// <summary>
@@ -164,9 +274,9 @@ namespace AnotherWhatever
                     "\n( 2 )\tList all registered users" +
                     "\n( 3 )\t" +
                     "\n( 4 )\t" +
-                    "\n( 5 )\t" +
+                    "\n( 5 )\tDelete own carpool" +
                     "\n( 6 )\t" +
-                    "\n( 7 )\t");
+                    "\n( 7 )\tDelete own account");
                 Console.ForegroundColor = ConsoleColor.Blue;
                 Console.WriteLine("\n( 9 )\tBack to the main menu");
                 Console.ResetColor();
@@ -223,12 +333,30 @@ namespace AnotherWhatever
                         userPassengerBool = true;
                         continue;
                     case 5:
+                        Console.Clear();
+                        CwL("The Carpool ID you want to remove: ");
+                        int carpoolID = Convert.ToInt32(Console.ReadLine());
+                        CwL("Your User ID to prove you are the driver: ");
+                        int userID = Convert.ToInt32(Console.ReadLine());
+                        CwL("Your account password: ");
+                        string password = Console.ReadLine();
+                        Console.Clear();
+                        DeleteCarpool(carpoolID, userID, password);
+                        Console.ReadLine();
                         userPassengerBool = true;
                         continue;
                     case 6:
                         userPassengerBool = true;
                         continue;
                     case 7:
+                        Console.Clear();
+                        CwL("Your User ID that you want to DELETE: ");
+                        userID = Convert.ToInt32(Console.ReadLine());
+                        CwL("Your account password: ");
+                        password = Console.ReadLine();
+                        Console.Clear();
+                        DeleteUserAccount(userID, password);
+                        Console.ReadLine();
                         userPassengerBool = true;
                         continue;
                     case 9:
